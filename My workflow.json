@@ -1,0 +1,216 @@
+{
+  "name": "My workflow",
+  "nodes": [
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "eed04655-4912-4325-aa8c-0a3eedf37bdd",
+              "name": "text",
+              "value": "={{ $json.message }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        220,
+        0
+      ],
+      "id": "0b5ea427-5d7c-4a59-a038-ffb5a8afc240",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=You are a professional virtual fashion stylist and product advisor working for a fashion retail brand. Your job is to engage with users via chatbot, understand their personal style preferences, and recommend suitable clothing, accessories, and fashion products.\n\nYour tone should be friendly, confident, and personalized.\n\nWhen a user asks for style advice, always consider:\n- Gender and age (if given)\n- Occasion (e.g., office, party, casual, wedding, etc.)\n- Season (summer, winter, etc.)\n- Budget (if specified)\n- Preferred colors, patterns, or brands (if mentioned)\n\nBased on their input, provide complete outfit suggestions (top, bottom, shoes, accessories) and include reasons why they suit the user. If product catalog links are available, include matching product suggestions with names and categories.\n\nIf you need more input, ask short, relevant questions to personalize the recommendations further.\n\nAlways end your response with a helpful follow-up question like:\n\"Would you like more options?\" or \"Should I include accessories too?\"\n\nRespond in 2–3 short paragraphs maximum.\n\nExample input: \n\"I’m going to a beach party. I like bright colors. I'm 25 and prefer comfort.\"\n\nExample response:\n\"Sounds fun! For a beach party, a bright linen shirt in coral or sky blue paired with white chino shorts would be stylish and breathable. Match it with espadrilles or leather sandals and some polarized sunglasses.\n\nWould you like me to suggest matching accessories or show items under ₹2000?\"",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2,
+      "position": [
+        440,
+        0
+      ],
+      "id": "00cea138-b7b9-4703-93cf-8df6eb5c759b",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "modelName": "models/gemini-2.0-flash",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        420,
+        200
+      ],
+      "id": "92321216-e707-42d2-aedf-2f8aad1b2f94",
+      "name": "Google Gemini Chat Model",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "MrUBoenvGbExXyru",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "={{ $('Telegram Trigger').item.json.message }}",
+        "contextWindowLength": 20
+      },
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.3,
+      "position": [
+        520,
+        200
+      ],
+      "id": "fd1ddfeb-48cc-47d0-a3ed-0b497a8908dd",
+      "name": "Simple Memory"
+    },
+    {
+      "parameters": {
+        "updates": [
+          "message",
+          "callback_query"
+        ],
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegramTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        0,
+        0
+      ],
+      "id": "e75650f8-0398-4f6c-99b6-c367ba2e4798",
+      "name": "Telegram Trigger",
+      "webhookId": "4d6cc169-fa95-42a5-8088-762d30ac6456",
+      "credentials": {
+        "telegramApi": {
+          "id": "HPnsOn5NYJJRKLnO",
+          "name": "Telegram account 5"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('Telegram Trigger').first().json.message.chat.id }}",
+        "text": "={{ $json.output }}",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        820,
+        0
+      ],
+      "id": "8d74bdf5-0978-4ac7-ab76-1cc0afa2c214",
+      "name": "Send a text message",
+      "webhookId": "083525c4-37fc-4284-889b-8093ece9bc59",
+      "notesInFlow": false,
+      "credentials": {
+        "telegramApi": {
+          "id": "HPnsOn5NYJJRKLnO",
+          "name": "Telegram account 5"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "type": "@n8n/n8n-nodes-langchain.toolThink",
+      "typeVersion": 1,
+      "position": [
+        680,
+        220
+      ],
+      "id": "e8cd48db-cda3-4b5f-aa71-cf5614bda898",
+      "name": "Think"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Simple Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Send a text message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Telegram Trigger": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Think": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "ba9b89d2-d150-4a94-9083-ca72a959a06b",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "97cf1b240dcf1e779fcfd282709974d94b5f339669ee3cced6e5f654a4ad6695"
+  },
+  "id": "HKi8bberUwHztAgz",
+  "tags": []
+}
